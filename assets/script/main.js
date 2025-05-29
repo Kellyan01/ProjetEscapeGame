@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; //loader for GLTF files
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; //controls for camera movement
+import { DragControls } from 'three/addons/controls/DragControls.js'; //controls for dragging objects
 
 ///////////////////////////////////////////////////
 //  SCENE SETUP
@@ -121,6 +122,10 @@ scene.add(directionalLightHelper);
 
 //Scene Rendering function
 function animate() {
+    //move the cube around GLTF Model
+    //cube.rotation.y -= 0.01;
+
+    //Render the scene with the camera
     renderer.render(scene, camera);
 }
 //Animation loop
@@ -134,3 +139,13 @@ renderer.setAnimationLoop(animate);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 2, 0);
 controls.update();
+
+//Add drag controls to cube
+const dragControls = new DragControls([cube], camera, renderer.domElement);
+dragControls.rotateSpeed = 10; //Set the rotation speed for drag controls
+dragControls.addEventListener('dragstart', function(event) {
+    controls.enabled = false; //Disable orbit controls before dragging
+});
+dragControls.addEventListener('dragend', function(event) {
+    controls.enabled = true; //Enable orbit controls after dragging
+});
