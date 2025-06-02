@@ -143,6 +143,8 @@ controls.update();
 //Add drag controls to cube
 const dragControls = new DragControls([cube], camera, renderer.domElement);
 dragControls.rotateSpeed = 10; //Set the rotation speed for drag controls
+//Set the Mouse Buttons
+dragControls.mouseButtons = {LEFT : THREE.MOUSE.ROTATE, CENTER : null, RIGHT : THREE.MOUSE.ROTATE};
 dragControls.addEventListener('dragstart', function(event) {
     controls.enabled = false; //Disable orbit controls before dragging
 });
