@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'; //loader for GLTF files
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'; //controls for camera movement
 import { DragControls } from 'three/addons/controls/DragControls.js'; //controls for dragging objects
+import { TransformControls } from 'three/addons/controls/TransformControls.js'; //controls for transforming objects
 
 ///////////////////////////////////////////////////
 //  SCENE SETUP
@@ -87,6 +88,94 @@ loader.load('./public/model3D/funko_test_model.glb',
     }
 );
 
+//load blue shell
+const loaderShell = new GLTFLoader();
+//variables
+let isRotating = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+//Raycaster for detecting mouse clicks on the shell model
+const raycaster = new THREE.Raycaster();
+//Mouse vector for detecting mouse position
+const mouse = new THREE.Vector2();
+
+loaderShell.load('./public/model3D/Shell_(Blue).glb',
+    function(gltf) {
+        console.log(gltf.scene);
+
+        // create a pivot point for the shell model
+        const shellPivot = new THREE.Group();
+        scene.add(shellPivot);
+
+        // Set the shell model's position relative to the pivot point
+        const boxShell = new THREE.Box3().setFromObject(gltf.scene);
+        const centerShell = new THREE.Vector3();
+        boxShell.getCenter(centerShell);
+        gltf.scene.position.sub(centerShell);
+
+        //create a parent group
+        const shellGroup = new THREE.Group();
+        //Add the loaded model to the group
+        shellGroup.add(gltf.scene); 
+
+        // Set the shell model's position and scale
+        shellPivot.add(shellGroup);
+        shellPivot.position.set(-5, 2, 1);
+        shellPivot.scale.set(0.015, 0.015, 0.015);
+
+        let rotationX = 0;
+
+        // Add event listeners for mouse events to rotate the shell model
+        renderer.domElement.addEventListener('mousedown', (event) => {
+            // Bounding box calculation to get the mouse position relative to the canvas
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Set the raycaster from the camera and mouse position
+            raycaster.setFromCamera(mouse, camera);
+            
+            // Check for intersections with the shell group
+            const intersects = raycaster.intersectObject(shellGroup, true);
+
+            // If there are intersections, start rotating the shell model
+            if (intersects.length > 0) {
+                isRotating = true;
+                lastMouseX = event.clientX;
+                lastMouseY = event.clientY;
+                controls.enabled = false;
+            }
+        });
+
+        // Add mouse move event listener to rotate the shell model
+        renderer.domElement.addEventListener('mousemove', (event) => {
+            // If the shell model is being rotated, update its rotation based on mouse movement
+            if (isRotating) {
+                const deltaX = event.clientX - lastMouseX;
+                const deltaY = event.clientY - lastMouseY;
+                shellPivot.rotation.y += deltaX * 0.01; 
+                rotationX += deltaY * 0.01;
+                shellGroup.rotation.x = rotationX; 
+                lastMouseX = event.clientX;
+                lastMouseY = event.clientY;
+            }
+        });
+
+        // Add mouse up event listener to stop rotating the shell model
+        renderer.domElement.addEventListener('mouseup', () => {
+            isRotating = false;
+            controls.enabled = true;
+        });
+        
+
+    },
+    undefined,
+    function(error) {
+        console.error(error);
+    }
+);
+
+
 ///////////////////////////////////////////////////
 //  LIGHTING
 ///////////////////////////////////////////////////
@@ -151,3 +240,4 @@ dragControls.addEventListener('dragstart', function(event) {
 dragControls.addEventListener('dragend', function(event) {
     controls.enabled = true; //Enable orbit controls after dragging
 });
+
